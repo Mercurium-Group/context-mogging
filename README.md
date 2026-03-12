@@ -63,11 +63,13 @@ Each step is a checkpoint. Nothing moves forward until the previous step is clea
 
 ## Install
 
-**Method 1: npm/npx** (Node.js 18+)
+**Method 1: npx from GitHub** (Node.js 18+)
 
 ```bash
-npx context-mogging init
+npx github:Mercurium-Group/context-mogging init
 ```
+
+> Once the package is published to npm, the shorter `npx context-mogging init` will also work.
 
 **Method 2: curl** (any system with bash)
 

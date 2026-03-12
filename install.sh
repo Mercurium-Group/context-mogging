@@ -26,8 +26,34 @@ while [[ $# -gt 0 ]]; do
 done
 
 # ── Resolve source directory ────────────────────────────────────────────────
+# BASH_SOURCE[0] is unbound when the script is piped via `curl | bash`.
+# Temporarily disable -u to read it safely, then restore.
+set +u
+_self="${BASH_SOURCE[0]:-$0}"
+set -u
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_DIR=""
+if [[ -n "$_self" && "$_self" != "bash" && "$_self" != "-bash" && -f "$_self" ]]; then
+  SCRIPT_DIR="$(cd "$(dirname "$_self")" && pwd)"
+fi
+
+# If sibling files are absent (curl | bash mode), download the archive from GitHub.
+if [[ ! -f "${SCRIPT_DIR}/templates/CLAUDE.md" ]]; then
+  echo "  Downloading context-mogging from GitHub..."
+  _tmpdir="$(mktemp -d)"
+  trap 'rm -rf "$_tmpdir"' EXIT
+  if ! curl -fsSL \
+      "https://github.com/Mercurium-Group/context-mogging/archive/refs/heads/main.tar.gz" \
+      | tar -xz -C "$_tmpdir" --strip-components=1; then
+    echo ""
+    echo "  ✗ Download failed. Install manually:"
+    echo "    git clone https://github.com/Mercurium-Group/context-mogging.git"
+    echo "    cd context-mogging && bash install.sh"
+    exit 1
+  fi
+  SCRIPT_DIR="$_tmpdir"
+fi
+
 CLAUDE_DIR="${TARGET_DIR}/.claude"
 
 # ── Helpers ─────────────────────────────────────────────────────────────────
