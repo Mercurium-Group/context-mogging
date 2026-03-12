@@ -1,0 +1,36 @@
+{
+  "name": "context-mogging",
+  "version": "1.0.0",
+  "description": "A portable context engineering system for Claude Code. Research → Plan → Implement pipeline with sub-agents, memory, and hooks.",
+  "author": "Mercurium Group",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Mercurium-Group/context-mogging.git"
+  },
+  "homepage": "https://github.com/Mercurium-Group/context-mogging",
+  "keywords": [
+    "claude-code",
+    "context-engineering",
+    "ai-workflow",
+    "sub-agents",
+    "developer-tools"
+  ],
+  "bin": {
+    "context-mogging": "./bin/install.js"
+  },
+  "files": [
+    "bin/",
+    "commands/",
+    "agents/",
+    "skills/",
+    "templates/",
+    "docs/",
+    "install.sh",
+    "LICENSE",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}

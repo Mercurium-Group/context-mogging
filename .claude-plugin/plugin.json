@@ -1,0 +1,8 @@
+{
+  "name": "context-mogging",
+  "description": "Research → Plan → Implement pipeline for Claude Code. Sub-agents, memory layers, and hooks for structured AI-assisted development.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Mercurium Group"
+  }
+}

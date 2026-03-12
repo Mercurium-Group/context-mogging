@@ -1,0 +1,3 @@
+thoughts/
+memory/sessions/
+.claude/CLAUDE.md
