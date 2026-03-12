@@ -5,18 +5,18 @@
 
 ## Project Identity
 
-- **Name**: [PROJECT_NAME]
-- **Created**: [DATE]
-- **Stack**: [STACK]
+- **Name**: {{PROJECT_NAME}}
+- **Created**: {{DATE}}
+- **Stack**: {{STACK}}
 
 ## Build Commands
 
 ```bash
-install: [INSTALL_CMD]
-dev:     [DEV_CMD]
-test:    [TEST_CMD]
-lint:    [LINT_CMD]
-build:   [BUILD_CMD]
+install: {{INSTALL_CMD}}
+dev:     {{DEV_CMD}}
+test:    {{TEST_CMD}}
+lint:    {{LINT_CMD}}
+build:   {{BUILD_CMD}}
 ```
 
 ## Architecture Decision Records

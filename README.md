@@ -83,7 +83,7 @@ cd context-mogging
 bash install.sh
 ```
 
-All three methods install the same files. The installer creates the directory structure, merges configuration into your existing `.claude/settings.json`, and prints a quickstart guide.
+All three methods install the same files. The installer auto-detects your project name, description, repo URL, package manager, and build commands from `package.json`, `Cargo.toml`, `go.mod`, or `pyproject.toml`. It then writes a pre-filled `CLAUDE.md` — search for `TODO:` to finish any fields it couldn't detect automatically.
 
 ---
 
@@ -91,7 +91,11 @@ All three methods install the same files. The installer creates the directory st
 
 After installing, open Claude Code in your project directory.
 
-**1. Check your setup**
+**1. Review your CLAUDE.md**
+
+The installer auto-detects your project name, repo URL, package manager, and build commands. Open `CLAUDE.md` and search for `TODO:` — those are the fields it couldn't auto-detect (typically naming conventions, architecture boundaries, and error types). For most projects you'll only need to fill in 2–4 items.
+
+**2. Check your setup**
 
 ```
 /status
@@ -99,7 +103,7 @@ After installing, open Claude Code in your project directory.
 
 This shows your current branch, recent commits, active artifacts, and context health.
 
-**2. Research before you build**
+**3. Research before you build**
 
 ```
 /research authentication flow
@@ -107,7 +111,7 @@ This shows your current branch, recent commits, active artifacts, and context he
 
 Claude spawns read-only Explorer agents that map the relevant code. Findings are saved to `thoughts/shared/research/`.
 
-**3. Turn research into a plan**
+**4. Turn research into a plan**
 
 ```
 /plan add OAuth login
@@ -115,7 +119,7 @@ Claude spawns read-only Explorer agents that map the relevant code. Findings are
 
 The Plan Architect (running on Opus for better planning quality) produces a phase-by-phase plan. It gets saved and presented for your review. You edit it if anything is off.
 
-**4. Execute the plan**
+**5. Execute the plan**
 
 ```
 /implement thoughts/shared/plans/add-oauth-login.md
@@ -123,7 +127,7 @@ The Plan Architect (running on Opus for better planning quality) produces a phas
 
 Claude works through the plan one phase at a time. Tests run after each phase. A security scan happens automatically. If anything fails, it stops and tells you exactly what broke.
 
-**5. Commit clean work**
+**6. Commit clean work**
 
 ```
 /checkpoint
@@ -158,7 +162,7 @@ This prepares a preservation list (active plan state, unresolved issues, key dec
 
 ```
 your-project/
-├── CLAUDE.md                        ← root governance template (fill in your project details)
+├── CLAUDE.md                        ← governance template (auto-filled; search TODO: for remaining items)
 ├── .claude/
 │   ├── CLAUDE.md                    ← local overrides (gitignored)
 │   ├── commands/                    ← the 6 slash commands above

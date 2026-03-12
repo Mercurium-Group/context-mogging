@@ -4,6 +4,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { detect } = require('./detect');
 
 // ── Config ──────────────────────────────────────────────────────────────────
 
@@ -22,6 +23,27 @@ const THOUGHTS_DIRS = [
   'thoughts/shared/plans',
   'thoughts/shared/logs',
 ];
+
+const FALLBACKS = {
+  PROJECT_NAME: 'TODO: project name',
+  SHORT_DESCRIPTION: 'TODO: one-line project description',
+  ARCHITECTURE: 'TODO: describe your architecture (e.g., Next.js + TypeScript + PostgreSQL)',
+  REPO_URL: 'TODO: repository URL',
+  INSTALL_CMD: 'TODO: install command',
+  DEV_CMD: 'TODO: dev server command',
+  TEST_CMD: 'TODO: test command',
+  LINT_CMD: 'TODO: lint command',
+  BUILD_CMD: 'TODO: build command',
+  LANGUAGE_CONVENTIONS: 'TODO: language and framework conventions',
+  NAMING_CONVENTIONS: 'TODO: naming conventions (e.g., camelCase for variables, PascalCase for components)',
+  FILE_STRUCTURE: 'TODO: file structure conventions',
+  TEST_CONVENTIONS: 'TODO: testing conventions',
+  PROTECTED_FILES: 'TODO: add project-specific protected files',
+  ARCHITECTURE_BOUNDARIES: '- TODO: define architecture boundaries',
+  ERROR_TYPES: 'TODO: project error types (e.g., AppError, ValidationError)',
+  STACK: 'TODO: tech stack',
+  DATE: new Date().toISOString().split('T')[0],
+};
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -111,6 +133,45 @@ function appendGitignoreLines(targetGitignore, additionsFile) {
   }
 }
 
+/**
+ * Read template file, replace {{TOKEN}} placeholders with detected values.
+ * Any token not detected falls back to FALLBACKS, then to a generic TODO.
+ */
+function applyTemplate(templatePath, detected) {
+  let content = fs.readFileSync(templatePath, 'utf8');
+  const allValues = Object.assign({}, FALLBACKS, detected);
+
+  for (const [key, value] of Object.entries(allValues)) {
+    if (value !== null && value !== undefined) {
+      // Use split+join to avoid RegExp issues with special chars in values
+      content = content.split(`{{${key}}}`).join(String(value));
+    }
+  }
+
+  // Catch any remaining unreplaced tokens and set generic fallback
+  content = content.replace(/\{\{[A-Z_]+\}\}/g, (match) => {
+    const key = match.slice(2, -2);
+    return `TODO: ${key.toLowerCase().replace(/_/g, ' ')}`;
+  });
+
+  return content;
+}
+
+/**
+ * Like copyFileIfMissing, but applies template substitution before writing.
+ */
+function writeTemplateIfMissing(templatePath, destPath, detected, force) {
+  if (fs.existsSync(destPath) && !force) {
+    warn(`Skipped (exists): ${path.relative(process.cwd(), destPath)}`);
+    return false;
+  }
+  ensureDir(path.dirname(destPath));
+  const content = applyTemplate(templatePath, detected);
+  fs.writeFileSync(destPath, content);
+  success(path.relative(process.cwd(), destPath));
+  return true;
+}
+
 // ── Main ────────────────────────────────────────────────────────────────────
 
 function main() {
@@ -144,8 +205,16 @@ function main() {
     process.exit(0);
   }
 
+  // Detect repo properties
+  console.log('Detecting project properties...');
+  const detected = detect(targetDir);
+  const templateKeys = Object.keys(FALLBACKS);
+  const detectedCount = templateKeys.filter(k => detected[k] != null).length;
+  const todoCount = templateKeys.length - detectedCount;
+  log(`Auto-detected ${detectedCount}/${templateKeys.length} fields${todoCount > 0 ? ` — ${todoCount} will be TODO: markers` : ' — no manual setup needed'}`);
+
   // 1. Copy commands, agents, skills → .claude/
-  console.log('Copying commands, agents, and skills...');
+  console.log('\nCopying commands, agents, and skills...');
   for (const dir of COPY_DIRS) {
     const src = path.join(pkgRoot, dir);
     const dest = path.join(claudeDir, dir);
@@ -168,11 +237,12 @@ function main() {
     success('.claude/settings.json (merged)');
   }
 
-  // 3. Copy CLAUDE.md templates
+  // 3. Write CLAUDE.md templates with substitution
   console.log('\nSetting up governance templates...');
-  copyFileIfMissing(
+  writeTemplateIfMissing(
     path.join(pkgRoot, 'templates', 'CLAUDE.md'),
     path.join(targetDir, 'CLAUDE.md'),
+    detected,
     false // never force-overwrite root CLAUDE.md
   );
   copyFileIfMissing(
@@ -199,9 +269,10 @@ function main() {
   for (const dir of MEMORY_DIRS) {
     ensureDir(path.join(targetDir, dir));
   }
-  copyFileIfMissing(
+  writeTemplateIfMissing(
     path.join(pkgRoot, 'templates', 'memory-core.md'),
     path.join(targetDir, 'memory', 'core.md'),
+    detected,
     force
   );
   // Add .gitkeep to empty dirs
@@ -221,13 +292,14 @@ function main() {
   }
 
   // 7. Print quickstart
+  const hasTodos = Object.values(detected).some(v => v === null || String(v).startsWith('TODO'));
   console.log(`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   ✅ context-mogging installed!
 
   Quick start:
-    1. Edit CLAUDE.md — fill in [PROJECT_NAME] and other placeholders
+    1. Review CLAUDE.md — search for TODO: to finish setup${hasTodos ? '\n       (a few fields need manual input)' : ''}
     2. Open Claude Code in this project
     3. Run /research to explore your codebase
     4. Run /plan to create an implementation plan
