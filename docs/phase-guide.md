@@ -264,11 +264,11 @@ moderate — long conversation, consider /compact before next task
 
 ---
 
-## Utility: Compact (`/compact`)
+## Utility: Save Session (`/save-session`)
 
 ### What it does
 
-Compact prepares you to safely reset the context window. It does not compact on its own — it gets you ready to use Claude's built-in `/compact` without losing important information.
+Save Session prepares you to safely reset the context window. It does not compact on its own — it gets you ready to use Claude's built-in `/compact` without losing important information.
 
 ### When to run it
 
@@ -301,7 +301,7 @@ Paste this when the built-in `/compact` asks what to preserve. After compaction,
 
 ### Write memory before compacting
 
-Never compact before writing important knowledge to memory. Compaction throws away the conversation. If a decision was made this session that should survive, it needs to be in `memory/core.md` first. `/compact` handles this automatically, but it's worth understanding why the order matters.
+Never compact before writing important knowledge to memory. Compaction throws away the conversation. If a decision was made this session that should survive, it needs to be in `memory/core.md` first. `/save-session` handles this automatically, but it's worth understanding why the order matters.
 
 ---
 

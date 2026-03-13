@@ -69,6 +69,12 @@ Each step is a checkpoint. Nothing moves forward until the previous step is clea
 npx context-mogging init
 ```
 
+To update an existing installation:
+
+```bash
+npx context-mogging@latest update
+```
+
 **Method 2: curl** (any system with bash)
 
 ```bash

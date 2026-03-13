@@ -32,7 +32,7 @@ build:   [BUILD_CMD]
 
 <!-- Format: - **[Issue]**: [Description] — Workaround: [workaround] -->
 - **hooks format bug** (resolved 2026-03-13, commit 9606336): Claude Code rejected generated `settings.json` with "hooks: Expected array, but received undefined". Root cause: hook entries used flat `{matcher, description, command}` structure instead of the required `{matcher, hooks: [{type: "command", command: "..."}]}` format. Fixed in `templates/settings.json`, `bin/install.js`, `install.sh`.
-- **package.json version mismatch**: `package.json` shows `1.0.0` but v1.1.0 (auto-detect feature) and a subsequent patch fix have shipped. Version needs bumping to `1.1.1` before next publish.
+- **package.json version mismatch**: Resolved in v1.3.0. Version is now `1.3.0`.
 
 ## Rejected Alternatives
 

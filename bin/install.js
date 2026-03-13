@@ -98,11 +98,13 @@ function deepMergeSettings(existing, incoming) {
       if (!merged.hooks[hookType]) {
         merged.hooks[hookType] = hookArray;
       } else {
+        // Purge old-format entries (flat command/description, no hooks array)
+        merged.hooks[hookType] = merged.hooks[hookType].filter(
+          h => Array.isArray(h.hooks) && h.hooks.length > 0
+        );
         // Add hook entries that don't already exist (match by first command in hooks array)
         const existingCmds = new Set(
-          merged.hooks[hookType].map(h =>
-            (h.hooks && h.hooks[0] && h.hooks[0].command) || ''
-          )
+          merged.hooks[hookType].map(h => (h.hooks[0] && h.hooks[0].command) || '')
         );
         for (const hook of hookArray) {
           const cmd = (hook.hooks && hook.hooks[0] && hook.hooks[0].command) || '';
@@ -183,15 +185,17 @@ function main() {
   const args = process.argv.slice(2);
   const command = args[0];
 
-  if (command !== 'init') {
-    console.log('\nUsage: npx context-mogging init [--dir <path>] [--force]\n');
+  if (command !== 'init' && command !== 'update') {
+    console.log('\nUsage: npx context-mogging init [--dir <path>] [--force]');
+    console.log('       npx context-mogging update [--dir <path>]\n');
     console.log('Options:');
     console.log('  --dir <path>  Target directory (default: current directory)');
     console.log('  --force       Overwrite existing files');
     process.exit(command === '--help' || command === '-h' ? 0 : 1);
   }
 
-  const force = args.includes('--force');
+  const isUpdate = command === 'update';
+  const force = isUpdate || args.includes('--force');
   const dirIdx = args.indexOf('--dir');
   const targetDir = dirIdx !== -1 && args[dirIdx + 1]
     ? path.resolve(args[dirIdx + 1])
@@ -298,6 +302,9 @@ function main() {
 
   // 7. Print quickstart
   const hasTodos = Object.values(detected).some(v => v === null || String(v).startsWith('TODO'));
+  if (isUpdate) {
+    console.log('  Updated from context-mogging@latest. Settings self-healed.\n');
+  }
   console.log(`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -311,6 +318,8 @@ function main() {
     5. Run /implement to execute the plan
 
   Pipeline: /research → /plan → /implement → /checkpoint
+
+  To update later:  npx context-mogging@latest update
 
   Docs: https://github.com/Mercurium-Group/context-mogging
 

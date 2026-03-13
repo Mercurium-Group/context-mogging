@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# verify.sh — manual verification suite for context-mogging v1.2.0
+# verify.sh — manual verification suite for context-mogging v1.3.0
 # Run from the repo root: bash scripts/verify.sh
 # Each test prints PASS or FAIL with a short reason.
 # Exit code: 0 if all pass, 1 if any fail.
@@ -367,6 +367,192 @@ if [ "$EXIT_CODE_BASH_SAFE" -eq 0 ]; then
 else
   fail "Bash guard hook returned exit code $EXIT_CODE_BASH_SAFE for 'git status' (expected 0)"
 fi
+
+# ── Section 7: old-format hook entries purged on reinstall ───────────────────
+
+echo ""
+echo "7. Old-format hook entries purged on reinstall"
+
+TMPDIR_PURGE=$(mktemp -d)
+
+# Write a settings.json with old-format (flat) hook entries into .claude/
+# so the installer finds it as the existing settings to merge into
+mkdir -p "$TMPDIR_PURGE/.claude"
+cat > "$TMPDIR_PURGE/.claude/settings.json" <<'SETTINGS_EOF'
+{
+  "hooks": {
+    "PreToolUse": [
+      {"matcher": "Write", "command": "echo old", "description": "old format"}
+    ]
+  }
+}
+SETTINGS_EOF
+
+# Run the installer against this temp directory
+node "$REPO_ROOT/bin/install.js" init --force --dir "$TMPDIR_PURGE" > /dev/null 2>&1 || true
+
+MERGED_SETTINGS="$TMPDIR_PURGE/.claude/settings.json"
+
+if [ -f "$MERGED_SETTINGS" ]; then
+  if python3 - "$MERGED_SETTINGS" 2>/dev/null <<'PYEOF'
+import json, sys
+data = json.load(open(sys.argv[1]))
+hooks = data.get('hooks', {})
+for hook_type, entries in hooks.items():
+    for entry in entries:
+        assert 'command' not in entry, \
+            f"Old-format entry found in {hook_type}: {entry}"
+PYEOF
+  then
+    pass "Old-format hook entries (flat command key) purged after reinstall"
+  else
+    fail "Old-format hook entries still present in merged settings.json after reinstall"
+  fi
+else
+  fail "Installer did not produce .claude/settings.json in temp dir"
+fi
+
+rm -rf "$TMPDIR_PURGE"
+
+# ── Section 8: jq merge purges old-format entries ────────────────────────────
+
+echo ""
+echo "8. install.sh jq merge purges old-format entries"
+
+if ! command -v jq &>/dev/null; then
+  echo "  NOTE  jq not available — skipping section 8"
+else
+  TMPDIR_JQ=$(mktemp -d)
+
+  # Write a settings.json with old-format hook entries (flat {matcher, command, description},
+  # no hooks array) as the "existing" file
+  cat > "$TMPDIR_JQ/existing.json" <<'EXISTING_EOF'
+{
+  "hooks": {
+    "PreToolUse": [
+      {"matcher": "Write", "command": "echo old", "description": "old format entry"}
+    ]
+  }
+}
+EXISTING_EOF
+
+  # Use the package's templates/settings.json as the "incoming" file
+  INCOMING_JQ="$REPO_ROOT/templates/settings.json"
+
+  # Run the exact jq expression from install.sh against the two files
+  jq -s '
+    .[0] as $existing | .[1] as $incoming |
+    $existing * $incoming |
+    .hooks = (
+      ($existing.hooks // {}) as $eh |
+      ($incoming.hooks // {}) as $ih |
+      ($eh | keys) + ($ih | keys) | unique | map(
+        . as $key |
+        {
+          ($key): (
+            (($eh[$key] // []) | map(select(.hooks != null and (.hooks | length) > 0)))
+            + ($ih[$key] // [])
+            | unique_by(.hooks[0].command)
+          )
+        }
+      ) | add // {}
+    )
+  ' "$TMPDIR_JQ/existing.json" "$INCOMING_JQ" > "$TMPDIR_JQ/merged.json" 2>/dev/null
+
+  if [ -f "$TMPDIR_JQ/merged.json" ]; then
+    if python3 - "$TMPDIR_JQ/merged.json" 2>/dev/null <<'PYEOF'
+import json, sys
+data = json.load(open(sys.argv[1]))
+hooks = data.get('hooks', {})
+for hook_type, entries in hooks.items():
+    for entry in entries:
+        assert 'command' not in entry, \
+            f"Old-format entry (top-level command key) found in {hook_type}: {entry}"
+PYEOF
+    then
+      pass "jq merge expression purges old-format entries (no top-level command key in output)"
+    else
+      fail "jq merge expression left old-format entries in merged output"
+    fi
+  else
+    fail "jq merge expression did not produce output file"
+  fi
+
+  rm -rf "$TMPDIR_JQ"
+fi
+
+# ── Section 9: `update` subcommand ───────────────────────────────────────────
+
+echo ""
+echo "9. 'update' subcommand"
+
+# 9a: invoking with no arguments exits non-zero and shows both subcommands in usage
+NODE_USAGE_OUTPUT=$(node "$REPO_ROOT/bin/install.js" 2>&1 || true)
+NODE_EXIT=0
+node "$REPO_ROOT/bin/install.js" > /dev/null 2>&1 || NODE_EXIT=$?
+
+if [ "$NODE_EXIT" -ne 0 ]; then
+  pass "node bin/install.js (no args) exits non-zero"
+else
+  fail "node bin/install.js (no args) exited 0 — expected a non-zero exit code"
+fi
+
+if echo "$NODE_USAGE_OUTPUT" | grep -q "init" && echo "$NODE_USAGE_OUTPUT" | grep -q "update"; then
+  pass "node bin/install.js (no args) usage string mentions both 'init' and 'update'"
+else
+  fail "node bin/install.js (no args) usage string missing 'init' or 'update': $NODE_USAGE_OUTPUT"
+fi
+
+# 9b: --help / -h exits zero (not an error)
+NODE_HELP_EXIT=0
+node "$REPO_ROOT/bin/install.js" --help > /dev/null 2>&1 || NODE_HELP_EXIT=$?
+if [ "$NODE_HELP_EXIT" -eq 0 ]; then
+  pass "node bin/install.js --help exits with code 0"
+else
+  fail "node bin/install.js --help exited $NODE_HELP_EXIT (expected 0)"
+fi
+
+# 9c: `update` installs into a fresh directory (exit 0, settings.json created)
+TMPDIR_UPDATE=$(mktemp -d)
+UPDATE_EXIT=0
+node "$REPO_ROOT/bin/install.js" update --dir "$TMPDIR_UPDATE" > /dev/null 2>&1 || UPDATE_EXIT=$?
+if [ "$UPDATE_EXIT" -eq 0 ]; then
+  pass "node bin/install.js update --dir <tmpdir> exits 0"
+else
+  fail "node bin/install.js update --dir <tmpdir> exited $UPDATE_EXIT (expected 0)"
+fi
+if [ -f "$TMPDIR_UPDATE/.claude/settings.json" ]; then
+  pass "node bin/install.js update creates .claude/settings.json"
+else
+  fail "node bin/install.js update did not create .claude/settings.json"
+fi
+rm -rf "$TMPDIR_UPDATE"
+
+# 9d: `update` overwrites existing files (force=true semantics)
+# Plant a sentinel command file, run `update`, verify it is overwritten.
+TMPDIR_OVERWRITE=$(mktemp -d)
+mkdir -p "$TMPDIR_OVERWRITE/.claude/commands"
+echo "# sentinel — should be overwritten" > "$TMPDIR_OVERWRITE/.claude/commands/research.md"
+
+node "$REPO_ROOT/bin/install.js" update --dir "$TMPDIR_OVERWRITE" > /dev/null 2>&1 || true
+
+SENTINEL_CONTENT=$(cat "$TMPDIR_OVERWRITE/.claude/commands/research.md" 2>/dev/null || echo "")
+if echo "$SENTINEL_CONTENT" | grep -q "sentinel"; then
+  fail "'update' did not overwrite existing command file — force semantics broken"
+else
+  pass "'update' overwrites existing files (research.md sentinel was replaced)"
+fi
+rm -rf "$TMPDIR_OVERWRITE"
+
+# 9e: `update` prints the "Updated from context-mogging" message (not the plain init banner)
+TMPDIR_MSG=$(mktemp -d)
+UPDATE_OUTPUT=$(node "$REPO_ROOT/bin/install.js" update --dir "$TMPDIR_MSG" 2>&1 || true)
+if echo "$UPDATE_OUTPUT" | grep -qi "updated from context-mogging"; then
+  pass "'update' prints the 'Updated from context-mogging' message"
+else
+  fail "'update' did not print expected update message; got: $(echo "$UPDATE_OUTPUT" | tail -5)"
+fi
+rm -rf "$TMPDIR_MSG"
 
 # ── Summary ──────────────────────────────────────────────────────────────────
 
