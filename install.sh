@@ -390,7 +390,7 @@ if [[ -f "$SETTINGS_SRC" ]]; then
         ($incoming.hooks // {}) as $ih |
         ($eh | keys) + ($ih | keys) | unique | map(
           . as $key |
-          { ($key): (($eh[$key] // []) + ($ih[$key] // []) | unique_by(.description)) }
+          { ($key): (($eh[$key] // []) + ($ih[$key] // []) | unique_by(.hooks[0].command)) }
         ) | add // {}
       )
     ' "$SETTINGS_DEST" "$SETTINGS_SRC" > "${SETTINGS_DEST}.tmp"

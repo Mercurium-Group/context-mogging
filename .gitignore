@@ -1,3 +1,8 @@
 node_modules/
 .DS_Store
 *.log
+
+# context-mogging
+thoughts/
+memory/sessions/
+.claude/CLAUDE.md

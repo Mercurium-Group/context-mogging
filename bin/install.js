@@ -98,10 +98,15 @@ function deepMergeSettings(existing, incoming) {
       if (!merged.hooks[hookType]) {
         merged.hooks[hookType] = hookArray;
       } else {
-        // Add hooks that don't already exist (match by description)
-        const existingDescs = new Set(merged.hooks[hookType].map(h => h.description));
+        // Add hook entries that don't already exist (match by first command in hooks array)
+        const existingCmds = new Set(
+          merged.hooks[hookType].map(h =>
+            (h.hooks && h.hooks[0] && h.hooks[0].command) || ''
+          )
+        );
         for (const hook of hookArray) {
-          if (!existingDescs.has(hook.description)) {
+          const cmd = (hook.hooks && hook.hooks[0] && hook.hooks[0].command) || '';
+          if (!existingCmds.has(cmd)) {
             merged.hooks[hookType].push(hook);
           }
         }
