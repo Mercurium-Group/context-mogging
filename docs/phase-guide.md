@@ -6,12 +6,12 @@ This document explains each stage of the Research → Plan → Implement → Che
 
 ## Overview
 
-The pipeline has four main phases and two utility commands:
+The pipeline has four main phases and three utility commands:
 
 ```
 /research  →  /plan  →  /implement  →  /checkpoint
                                   ↕
-                             /status  /compact
+                    /status  /save-session  /metrics
 ```
 
 Each phase has a clear input and output. The output of one phase is the input to the next. Nothing starts until the previous phase is complete and reviewed.
@@ -302,3 +302,37 @@ Paste this when the built-in `/compact` asks what to preserve. After compaction,
 ### Write memory before compacting
 
 Never compact before writing important knowledge to memory. Compaction throws away the conversation. If a decision was made this session that should survive, it needs to be in `memory/core.md` first. `/compact` handles this automatically, but it's worth understanding why the order matters.
+
+---
+
+## Utility: Metrics (`/metrics`)
+
+### What it does
+
+Metrics aggregates event data from your pipeline sessions and displays a dashboard showing session health, pipeline flow, code activity, and memory growth. It reads from `thoughts/shared/logs/events.jsonl` (populated automatically by hooks and commands) and from `git log`.
+
+### When to run it
+
+- At the start of a work week, to review how the pipeline is performing
+- After completing a multi-session task, to see the full flow
+- When you suspect the pipeline is underperforming (too many blocked implements, too-frequent compaction)
+
+### Input
+
+```
+/metrics
+/metrics --since 30d
+/metrics --json
+```
+
+### What it shows
+
+- **Session Health**: How many sessions, how long they lasted, how often you compacted, how many guard blocks fired
+- **Pipeline Flow**: Research-to-plan conversion rate, implementation success rate, checkpoint pass rate
+- **Code Activity**: Commits, files changed, lines of churn
+- **Memory Growth**: ADRs, known issues, conventions tracked over time
+- **Recommendations**: Actionable suggestions based on the numbers
+
+### Privacy
+
+All metrics data stays local. The `thoughts/` directory is gitignored by default. No data is sent anywhere. The event log is a plain JSONL file at `thoughts/shared/logs/events.jsonl` — you can read, edit, or delete it at any time.

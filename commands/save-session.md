@@ -67,6 +67,12 @@ Next: Run the built-in `/compact` command now.
 After compaction, run `/status` to verify orientation.
 ```
 
+### Step 5: Log compaction
+
+```bash
+python3 -c "import json,datetime,os; root=os.popen('git rev-parse --show-toplevel 2>/dev/null').read().strip() or os.getcwd(); uncommitted=len(os.popen('git status --porcelain 2>/dev/null').read().splitlines()); log=os.path.join(root,'thoughts/shared/logs','events.jsonl'); os.makedirs(os.path.dirname(log),exist_ok=True); f=open(log,'a'); f.write(json.dumps({'ts':datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'),'event':'save_session','uncommitted_files':uncommitted})+chr(10)); f.close()" 2>/dev/null || true
+```
+
 ### Rules
 
 - **Write memory before compacting** — never compact before capturing durable knowledge

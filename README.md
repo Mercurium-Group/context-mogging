@@ -138,7 +138,7 @@ Tests run one more time. If they pass, changes are committed and memory is updat
 **When things get slow**
 
 ```
-/compact
+/save-session
 ```
 
 This prepares a preservation list (active plan state, unresolved issues, key decisions), writes anything important to memory, then guides you through Claude's built-in `/compact` so nothing critical is lost.
@@ -154,7 +154,8 @@ This prepares a preservation list (active plan state, unresolved issues, key dec
 | `/implement [path]` | Executes a plan phase by phase, with tests and security review at each step |
 | `/checkpoint [message]` | Runs tests, commits passing changes, updates memory |
 | `/status` | Reports pipeline state, active artifacts, git status, context health |
-| `/compact` | Prepares for context compaction — writes memory, builds preservation list |
+| `/save-session` | Prepares for context compaction — writes memory, builds preservation list |
+| `/metrics [--since Nd]` | Displays pipeline health dashboard from event logs and git history |
 
 ---
 
@@ -165,7 +166,7 @@ your-project/
 ├── CLAUDE.md                        ← governance template (auto-filled; search TODO: for remaining items)
 ├── .claude/
 │   ├── CLAUDE.md                    ← local overrides (gitignored)
-│   ├── commands/                    ← the 6 slash commands above
+│   ├── commands/                    ← the 7 slash commands above
 │   ├── agents/                      ← 7 specialized sub-agents
 │   ├── skills/                      ← 3 skills (git workflow, testing patterns, error handling)
 │   └── settings.json                ← hooks configuration (merged with existing settings)
@@ -175,7 +176,7 @@ your-project/
     └── shared/
         ├── research/                ← timestamped research artifacts
         ├── plans/                   ← implementation plans
-        └── logs/                    ← session logs
+        └── logs/                    ← session logs (events.jsonl written by hooks)
 ```
 
 The `memory/` and `thoughts/` directories are gitignored by default. They're for Claude's working memory and session artifacts, not for committing.

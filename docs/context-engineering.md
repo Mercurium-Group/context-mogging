@@ -32,7 +32,7 @@ The "Smart Zone" is a heuristic for context health:
 - **Above 60%**: Start preparing for compaction. Finish the current task, write anything important to memory, then compact.
 - **Above 80%**: Quality starts to drop noticeably. Compact before starting anything new.
 
-The `/status` command reports context health. The `/compact` command prepares you to reset safely.
+The `/status` command reports context health. The `/save-session` command prepares you to reset safely.
 
 ---
 
@@ -57,7 +57,7 @@ When context gets heavy, you need to decide what to keep and what to discard. No
 - Files that were read during exploration
 - Intermediate reasoning steps
 
-The `/compact` command handles this hierarchy: it writes Tier 1 items to `memory/core.md`, identifies Tier 2 artifacts by path, and builds a preservation hint for Claude's built-in `/compact` command.
+The `/save-session` command handles this hierarchy: it writes Tier 1 items to `memory/core.md`, identifies Tier 2 artifacts by path, and builds a preservation hint for Claude's built-in `/compact` command.
 
 ---
 
@@ -75,7 +75,7 @@ Applied here: The `/implement` command explicitly loads only three things — th
 
 > "Long contexts degrade quality. Regularly summarize and compress."
 
-Applied here: The `/compact` command exists specifically for this. It's designed to be run between tasks, not as a recovery tool. The `/checkpoint` command also assesses context weight after committing and suggests `/compact` when appropriate.
+Applied here: The `/save-session` command exists specifically for this. It's designed to be run between tasks, not as a recovery tool. The `/checkpoint` command also assesses context weight after committing and suggests `/save-session` when appropriate.
 
 ### 3. Don't improvise — surface ambiguity
 
@@ -112,7 +112,7 @@ Context-mogging uses three layers of memory with different lifetimes and purpose
 **Purpose**: Durable, project-wide knowledge
 **Contents**: Project identity, build/test commands, architectural decisions (ADRs), established conventions, known issues, rejected alternatives
 
-Updated by: `/checkpoint` (when architecture changes), `/compact` (before session ends)
+Updated by: `/checkpoint` (when architecture changes), `/save-session` (before session ends)
 
 ### Layer 2: Artifacts (`thoughts/shared/`)
 **Lifetime**: Session-to-session (gitignored, but persists on disk)
@@ -126,7 +126,7 @@ Used by: `/plan` reads the latest research artifact; `/implement` reads the plan
 **Purpose**: Working through a specific task
 **Contents**: The current conversation, files read this session, agent outputs
 
-Managed by: `/compact`, Claude's built-in `/compact`
+Managed by: `/save-session`, Claude's built-in `/compact`
 
 The key discipline: anything important that lives only in Layer 3 at the end of a session is lost. The pipeline is designed to push important knowledge up to Layer 1 or Layer 2 before compaction.
 

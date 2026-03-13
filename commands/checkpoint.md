@@ -16,7 +16,12 @@ Find the test command from CLAUDE.md or `package.json` scripts. Run it:
 [test command]
 ```
 
-If tests fail, stop immediately:
+If tests fail, log the failure and stop immediately:
+
+```bash
+python3 -c "import json,datetime,os; root=os.popen('git rev-parse --show-toplevel 2>/dev/null').read().strip() or os.getcwd(); log=os.path.join(root,'thoughts/shared/logs','events.jsonl'); os.makedirs(os.path.dirname(log),exist_ok=True); f=open(log,'a'); f.write(json.dumps({'ts':datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'),'event':'checkpoint_failed','reason':'tests_failed'})+chr(10)); f.close()" 2>/dev/null || true
+```
+
 ```
 ## Checkpoint Failed — Tests Not Passing
 
@@ -69,6 +74,21 @@ Skip this step if nothing important changed. Do not update memory for implementa
 **Committed**: [short hash] — [message]
 **Files**: [N files changed]
 **Memory**: [updated: [what changed] / no changes]
+```
+
+### Step 6: Log checkpoint
+
+```bash
+python3 -c "
+import json,datetime,os,re
+root=os.popen('git rev-parse --show-toplevel 2>/dev/null').read().strip() or os.getcwd()
+commit=os.popen('git rev-parse --short HEAD 2>/dev/null').read().strip() or 'none'
+stat=os.popen('git diff --stat HEAD~1 2>/dev/null | tail -1').read()
+m=re.search(r'(\d+) file',stat)
+fc=int(m.group(1)) if m else 0
+log=os.path.join(root,'thoughts/shared/logs','events.jsonl')
+f=open(log,'a'); f.write(json.dumps({'ts':datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'),'event':'checkpoint','commit':commit,'files_changed':fc,'tests':'PASS'})+chr(10)); f.close()
+" 2>/dev/null || true
 ```
 
 Assess context weight:

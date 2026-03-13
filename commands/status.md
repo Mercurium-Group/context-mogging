@@ -62,3 +62,6 @@ End with one of:
 
 Or if context is heavy:
 > Run `/save-session` before starting the next task to keep things clean.
+
+For detailed pipeline KPIs and session health:
+> Run `/metrics` to see checkpoint success rates, session durations, and pipeline conversion rates.

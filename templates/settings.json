@@ -7,6 +7,10 @@
           {
             "type": "command",
             "command": "python3 -c \"import sys,json; d=json.load(sys.stdin); p=d.get('tool_input',{}).get('file_path',''); (print('Blocked: '+p+' is a protected governance file. Edit manually to preserve context integrity.') or sys.exit(2)) if any(p.endswith(x) for x in ['CLAUDE.md','CLAUDE.local.md']) else None\""
+          },
+          {
+            "type": "command",
+            "command": "python3 -c \"import sys,json,os,datetime; d=json.load(sys.stdin); p=d.get('tool_input',{}).get('file_path',''); blocked=any(p.endswith(x) for x in ['CLAUDE.md','CLAUDE.local.md']); root=(os.popen('git rev-parse --show-toplevel 2>/dev/null').read().strip() or os.getcwd()) if blocked else ''; blocked and (os.makedirs(os.path.join(root,'thoughts/shared/logs'),exist_ok=True),[(f.write(json.dumps({'ts':datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'),'event':'guard_block','tool':'Write','path':p})+chr(10)),f.close()) for f in [open(os.path.join(root,'thoughts/shared/logs','events.jsonl'),'a')]])\" 2>/dev/null || true"
           }
         ]
       },
@@ -16,6 +20,10 @@
           {
             "type": "command",
             "command": "python3 -c \"import sys,json; d=json.load(sys.stdin); c=d.get('tool_input',{}).get('command',''); dangerous=['git reset --hard','git push --force','git push -f','git clean -f','git checkout -- .']; [(print('Blocked: '+x+' is a destructive git operation. Confirm explicitly if you really need this.') or sys.exit(2)) for x in dangerous if x in c]\""
+          },
+          {
+            "type": "command",
+            "command": "python3 -c \"import sys,json,os,datetime; d=json.load(sys.stdin); c=d.get('tool_input',{}).get('command',''); dangerous=['git reset --hard','git push --force','git push -f','git clean -f','git checkout -- .']; matches=[x for x in dangerous if x in c]; root=(os.popen('git rev-parse --show-toplevel 2>/dev/null').read().strip() or os.getcwd()) if matches else ''; matches and (os.makedirs(os.path.join(root,'thoughts/shared/logs'),exist_ok=True),[(f.write(json.dumps({'ts':datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'),'event':'guard_block','tool':'Bash','command':matches[0]})+chr(10)),f.close()) for f in [open(os.path.join(root,'thoughts/shared/logs','events.jsonl'),'a')]])\" 2>/dev/null || true"
           }
         ]
       }
@@ -27,6 +35,10 @@
           {
             "type": "command",
             "command": "python3 -c \"import sys,json,os,subprocess; d=json.load(sys.stdin); p=d.get('tool_input',{}).get('file_path',''); skip=any(x in p for x in ['test','spec','.json','.lock','node_modules']); skip or (os.path.exists('package.json') and subprocess.run(['sh','-c','npm test -- --passWithNoTests --silent 2>&1 | tail -5'],check=False))\""
+          },
+          {
+            "type": "command",
+            "command": "python3 -c \"import os,datetime,json; root=os.popen('git rev-parse --show-toplevel 2>/dev/null').read().strip() or os.getcwd(); log=os.path.join(root,'thoughts/shared/logs','events.jsonl'); os.makedirs(os.path.dirname(log),exist_ok=True); f=open(log,'a'); f.write(json.dumps({'ts':datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'),'event':'post_edit'})+chr(10)); f.close()\" 2>/dev/null || true"
           }
         ]
       }
@@ -37,6 +49,10 @@
           {
             "type": "command",
             "command": "bash -c \"[ -f memory/core.md ] && { echo '=== Core Memory ==='; cat memory/core.md; echo '=== End Memory ==='; }\""
+          },
+          {
+            "type": "command",
+            "command": "python3 -c \"import os,json,datetime; root=os.popen('git rev-parse --show-toplevel 2>/dev/null').read().strip() or os.getcwd(); branch=os.popen('git branch --show-current 2>/dev/null').read().strip() or 'unknown'; commit=os.popen('git rev-parse --short HEAD 2>/dev/null').read().strip() or 'none'; log=os.path.join(root,'thoughts/shared/logs','events.jsonl'); os.makedirs(os.path.dirname(log),exist_ok=True); f=open(log,'a'); f.write(json.dumps({'ts':datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'),'event':'session_start','branch':branch,'last_commit':commit})+chr(10)); f.close()\" 2>/dev/null || true"
           }
         ]
       }
@@ -47,6 +63,10 @@
           {
             "type": "command",
             "command": "bash -c \"git rev-parse --git-dir >/dev/null 2>&1 || exit 0; git status --porcelain 2>/dev/null | grep -q . && echo 'WARNING: Uncommitted changes detected. Run /checkpoint before your next session.' && git status --short | head -10 || true\""
+          },
+          {
+            "type": "command",
+            "command": "python3 -c \"import os,json,datetime; root=os.popen('git rev-parse --show-toplevel 2>/dev/null').read().strip() or os.getcwd(); uncommitted=len(os.popen('git status --porcelain 2>/dev/null').read().splitlines()); log=os.path.join(root,'thoughts/shared/logs','events.jsonl'); os.makedirs(os.path.dirname(log),exist_ok=True); f=open(log,'a'); f.write(json.dumps({'ts':datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'),'event':'session_end','uncommitted_files':uncommitted})+chr(10)); f.close()\" 2>/dev/null || true"
           }
         ]
       }

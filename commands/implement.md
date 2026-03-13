@@ -19,6 +19,12 @@ Read the plan file. Read nothing else except:
 
 Do not load the research artifact. Do not browse the codebase. The plan is the source of truth.
 
+### Step 1.5: Log implementation start
+
+```bash
+python3 -c "import json,datetime,os; root=os.popen('git rev-parse --show-toplevel 2>/dev/null').read().strip() or os.getcwd(); log=os.path.join(root,'thoughts/shared/logs','events.jsonl'); os.makedirs(os.path.dirname(log),exist_ok=True); f=open(log,'a'); f.write(json.dumps({'ts':datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'),'event':'phase_start','phase':'implement'})+chr(10)); f.close()" 2>/dev/null || true
+```
+
 ### Step 2: Execute phases
 
 For each phase in the plan:
@@ -33,7 +39,11 @@ For each phase in the plan:
    [test command from CLAUDE.md]
    ```
 
-**3. If tests fail**: Stop. Report what failed. Do NOT proceed to the next phase. Wait for user instruction.
+**3. If tests fail**: Stop. Log the failure, report what failed. Do NOT proceed to the next phase. Wait for user instruction.
+
+```bash
+python3 -c "import json,datetime,os; root=os.popen('git rev-parse --show-toplevel 2>/dev/null').read().strip() or os.getcwd(); log=os.path.join(root,'thoughts/shared/logs','events.jsonl'); f=open(log,'a'); f.write(json.dumps({'ts':datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'),'event':'phase_end','phase':'implement','result':'BLOCKED'})+chr(10)); f.close()" 2>/dev/null || true
+```
 
 **4. If tests pass**: Spawn Security Reviewer with the list of changed files.
 
@@ -58,6 +68,12 @@ Print a summary:
 **Files changed**: [list]
 **Tests**: PASS
 **Security**: [CLEAN / N warnings noted]
+```
+
+Log the completion:
+
+```bash
+python3 -c "import json,datetime,os; root=os.popen('git rev-parse --show-toplevel 2>/dev/null').read().strip() or os.getcwd(); log=os.path.join(root,'thoughts/shared/logs','events.jsonl'); f=open(log,'a'); f.write(json.dumps({'ts':datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'),'event':'phase_end','phase':'implement','result':'COMPLETE'})+chr(10)); f.close()" 2>/dev/null || true
 ```
 
 Then say:

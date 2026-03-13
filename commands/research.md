@@ -9,6 +9,12 @@ argument-hint: "[topic or question to research]"
 
 You are running the **Research** phase of the context engineering pipeline.
 
+### Step 0: Log phase start
+
+```bash
+python3 -c "import json,datetime,os; root=os.popen('git rev-parse --show-toplevel 2>/dev/null').read().strip() or os.getcwd(); log=os.path.join(root,'thoughts/shared/logs','events.jsonl'); os.makedirs(os.path.dirname(log),exist_ok=True); f=open(log,'a'); f.write(json.dumps({'ts':datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'),'event':'phase_start','phase':'research'})+chr(10)); f.close()" 2>/dev/null || true
+```
+
 ### Step 1: Parse the request
 
 Extract the research topic from `$ARGUMENTS`. If no argument was given, ask: "What should I research?"
@@ -40,6 +46,12 @@ Print a brief summary (≤10 lines) of the key findings. Print the artifact path
 
 Then say:
 > Research complete. Run `/plan [task description]` to create an implementation plan, or `/plan --from [artifact path]` to use this research directly.
+
+### Step 5: Log phase end
+
+```bash
+python3 -c "import json,datetime,os,shlex; root=os.popen('git rev-parse --show-toplevel 2>/dev/null').read().strip() or os.getcwd(); log=os.path.join(root,'thoughts/shared/logs','events.jsonl'); artifact=os.popen('ls -t '+shlex.quote(os.path.join(root,'thoughts/shared/research'))+'/*.md 2>/dev/null | head -1').read().strip(); f=open(log,'a'); f.write(json.dumps({'ts':datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'),'event':'phase_end','phase':'research','artifact':artifact})+chr(10)); f.close()" 2>/dev/null || true
+```
 
 ### Context discipline
 
