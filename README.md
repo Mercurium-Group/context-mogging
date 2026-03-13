@@ -35,7 +35,7 @@ Context mogging solves this by making the workflow explicit. Research happens be
   → saves artifact to thoughts/shared/research/
       │
       ▼
-/plan [task]
+/draft-plan [task]
       │
       ▼
   Plan Architect turns research into a phase-by-phase plan
@@ -120,7 +120,7 @@ Claude spawns read-only Explorer agents that map the relevant code. Findings are
 **4. Turn research into a plan**
 
 ```
-/plan add OAuth login
+/draft-plan add OAuth login
 ```
 
 The Plan Architect (running on Opus for better planning quality) produces a phase-by-phase plan. It gets saved and presented for your review. You edit it if anything is off.
@@ -141,13 +141,13 @@ Claude works through the plan one phase at a time. Tests run after each phase. A
 
 Tests run one more time. If they pass, changes are committed and memory is updated. If they fail, nothing is committed.
 
-**When things get slow**
+**When context feels heavy**
 
 ```
 /save-session
 ```
 
-This prepares a preservation list (active plan state, unresolved issues, key decisions), writes anything important to memory, then guides you through Claude's built-in `/compact` so nothing critical is lost.
+This is intentional context hygiene. It writes durable knowledge to memory and presents two paths: compact in-place using Claude's built-in `/compact`, or start a fresh session with a continuation prompt so you pick up exactly where you left off. Use it after `/checkpoint`, after `/draft-plan`, or any time context hits 50-60%+.
 
 ---
 
@@ -156,11 +156,11 @@ This prepares a preservation list (active plan state, unresolved issues, key dec
 | Command | What it does |
 |---|---|
 | `/research [topic]` | Explores the codebase, synthesizes findings into a research artifact |
-| `/plan [task]` | Creates a phase-by-phase implementation plan for human review |
+| `/draft-plan [task]` | Creates a phase-by-phase implementation plan for human review |
 | `/implement [path]` | Executes a plan phase by phase, with tests and security review at each step |
 | `/checkpoint [message]` | Runs tests, commits passing changes, updates memory |
 | `/status` | Reports pipeline state, active artifacts, git status, context health |
-| `/save-session` | Prepares for context compaction — writes memory, builds preservation list |
+| `/save-session` | Context hygiene — writes memory, then offers compact in-place or fresh session with continuation prompt |
 | `/metrics [--since Nd]` | Displays pipeline health dashboard from event logs and git history |
 
 ---
@@ -186,6 +186,46 @@ your-project/
 ```
 
 The `memory/` and `thoughts/` directories are gitignored by default. They're for Claude's working memory and session artifacts, not for committing.
+
+---
+
+## Patterns & Anti-patterns
+
+Things learned from real usage that will save you time.
+
+### Do
+
+- **Follow the pipeline order**: `/research` → `/draft-plan` → `/implement` → `/checkpoint`. Each step feeds the next.
+- **Run `/save-session` at natural stopping points.** After `/checkpoint`. After `/draft-plan`. When context hits 50-60%. It's cheap to run and protects you from the dumb zone.
+- **Use `/status` to orient** when resuming a session or feeling lost.
+- **Review the plan before implementing.** The human review gate between `/draft-plan` and `/implement` is the highest-leverage moment in the pipeline.
+- **Let `/research` stay read-only.** If it starts modifying files, stop it — that's what `/draft-plan` and `/implement` are for.
+
+### Don't
+
+- **Don't skip `/save-session` because you think you'll remember the context.** You won't. The dumb zone is subtle — you only notice it after output quality degrades.
+- **Don't skip `/draft-plan` and jump to `/implement`.** No plan = no human review gate = worse implementation.
+- **Don't let `/research` make code changes.** If Claude starts editing files during research, stop it and redirect to `/draft-plan`.
+- **Don't run `/implement` without reading the plan.** The plan is editable markdown. Review it, adjust it, then implement.
+- **Don't type `/compact` expecting context-mogging behavior.** Context-mogging has no `/compact` command. Use `/save-session` then choose Path A (compact in-place via Claude's built-in) or Path B (fresh session).
+
+---
+
+## Working with Claude's Built-in Commands
+
+Context-mogging commands live in the same namespace as Claude Code's built-in commands. Here is how they relate:
+
+| Context-mogging | Claude Built-in | How they relate |
+|---|---|---|
+| `/research` | — | No built-in equivalent. Read-only exploration only. |
+| `/draft-plan` | Plan mode (`shift+tab`) | `/draft-plan` creates a file-based plan artifact for human review. Claude's plan mode is an interactive in-conversation toggle. Different purposes — use both freely. |
+| `/implement` | — | No built-in equivalent. |
+| `/checkpoint` | — | No built-in equivalent. |
+| `/save-session` | `/compact` | `/save-session` is the preparation step: saves memory, builds continuation prompt, offers two paths. Claude's `/compact` does the in-place compression (Path A). They work together. |
+| `/status` | `/context` | `/status` shows pipeline state and active artifacts. `/context` shows token usage. Run both when orienting. |
+| `/metrics` | — | No built-in equivalent. |
+
+**If you see multiple options in the autocomplete dropdown**, look at the description text to tell them apart. Context-mogging commands describe their pipeline role.
 
 ---
 

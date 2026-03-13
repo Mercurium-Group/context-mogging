@@ -75,7 +75,7 @@ Count ADRs and items under Known Issues / Conventions.
 No metrics data yet.
 
 Run a full pipeline cycle to start collecting:
-  /research [topic]  →  /plan [task]  →  /implement [plan]  →  /checkpoint
+  /research [topic]  →  /draft-plan [task]  →  /implement [plan]  →  /checkpoint
 
 Hooks and commands will log events automatically to:
   thoughts/shared/logs/events.jsonl

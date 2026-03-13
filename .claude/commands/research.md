@@ -39,11 +39,19 @@ Create the directory if it doesn't exist: `mkdir -p thoughts/shared/research/`
 Print a brief summary (≤10 lines) of the key findings. Print the artifact path.
 
 Then say:
-> Research complete. Run `/plan [task description]` to create an implementation plan, or `/plan --from [artifact path]` to use this research directly.
+> Research complete. Run `/draft-plan [task description]` to create an implementation plan, or `/draft-plan --from [artifact path]` to use this research directly.
 
 ### Context discipline
 
 This command should use ≤40% of context when complete. If you find yourself loading many files directly, delegate to Explorer agents instead. The artifact is the output — keep the main context clean.
+
+### Prohibited actions
+
+- **Do NOT edit, create, or modify any files outside of `thoughts/shared/research/`.**
+- Do NOT create, modify, or delete source code, config files, or documentation.
+- Do NOT run commands that modify files (`sed -i`, `tee`, output redirects to project files).
+- The ONLY file you may write is the research artifact in `thoughts/shared/research/`.
+- If you discover changes that should be made, record them under "Recommendations" in the artifact — do not implement them.
 
 ### Artifact format
 

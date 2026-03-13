@@ -75,7 +75,7 @@ Assess context weight:
 - If the conversation has been long or many files were loaded, say:
   > Context is getting heavy. Run `/save-session` before starting the next task.
 - Otherwise:
-  > Ready for the next task. Run `/research [topic]` or `/plan [task]` to continue.
+  > Ready for the next task. Run `/research [topic]` or `/draft-plan [task]` to continue.
 
 ### Rules
 

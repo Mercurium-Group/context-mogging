@@ -8,7 +8,7 @@ This document covers: what each agent does, when to spawn it manually, what to e
 
 ## How agents work in Claude Code
 
-Sub-agents are spawned by slash commands automatically. You don't need to call them directly during a normal pipeline run — `/research` spawns Explorer and Pattern Finder, `/plan` spawns Plan Architect, `/implement` orchestrates Implementer, Security Reviewer, Test Architect, and Doc Agent.
+Sub-agents are spawned by slash commands automatically. You don't need to call them directly during a normal pipeline run — `/research` spawns Explorer and Pattern Finder, `/draft-plan` spawns Plan Architect, `/implement` orchestrates Implementer, Security Reviewer, Test Architect, and Doc Agent.
 
 You can also spawn any agent manually using Claude Code's agent spawning syntax:
 
@@ -139,7 +139,7 @@ Plan Architect turns a task description and research findings into a precise, ex
 
 ### When to spawn it manually
 
-Normally you don't — `/plan` handles this. Spawn manually if:
+Normally you don't — `/draft-plan` handles this. Spawn manually if:
 - You want a plan for a sub-task within a larger plan
 - You want to compare two different planning approaches
 - You're iterating on an existing plan and want fresh input
@@ -419,7 +419,7 @@ Memory updated: no
 |---|---|---|---|
 | Explorer | Sonnet | `/research` | Exploring unfamiliar code areas |
 | Pattern Finder | Sonnet | `/research` | Finding project conventions |
-| Plan Architect | Opus | `/plan` | Planning sub-tasks |
+| Plan Architect | Opus | `/draft-plan` | Planning sub-tasks |
 | Implementer | Sonnet | `/implement` | Executing bounded changes |
 | Security Reviewer | Sonnet | `/implement` | Reviewing existing code, PRs |
 | Test Architect | Sonnet | `/implement` | Writing tests for existing code |

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# verify.sh — manual verification suite for context-mogging v1.3.0
+# verify.sh — manual verification suite for context-mogging v1.4.0
 # Run from the repo root: bash scripts/verify.sh
 # Each test prints PASS or FAIL with a short reason.
 # Exit code: 0 if all pass, 1 if any fail.
@@ -553,6 +553,207 @@ else
   fail "'update' did not print expected update message; got: $(echo "$UPDATE_OUTPUT" | tail -5)"
 fi
 rm -rf "$TMPDIR_MSG"
+
+# ── Section 10: Deprecated file cleanup ──────────────────────────────────────
+
+echo ""
+echo "10. Deprecated file cleanup"
+
+# 10a: Plant compact.md and plan.md, run update, verify both deleted
+TMPDIR_DEPR=$(mktemp -d)
+mkdir -p "$TMPDIR_DEPR/.claude/commands"
+echo "# old" > "$TMPDIR_DEPR/.claude/commands/compact.md"
+echo "# old" > "$TMPDIR_DEPR/.claude/commands/plan.md"
+node "$REPO_ROOT/bin/install.js" update --dir "$TMPDIR_DEPR" > /dev/null 2>&1 || true
+
+if [ ! -f "$TMPDIR_DEPR/.claude/commands/compact.md" ]; then
+  pass "Deprecated commands/compact.md removed by 'update'"
+else
+  fail "Deprecated commands/compact.md still present after 'update'"
+fi
+
+if [ ! -f "$TMPDIR_DEPR/.claude/commands/plan.md" ]; then
+  pass "Deprecated commands/plan.md removed by 'update'"
+else
+  fail "Deprecated commands/plan.md still present after 'update'"
+fi
+rm -rf "$TMPDIR_DEPR"
+
+# 10b: Run update on fresh dir (no deprecated files) — must not error
+TMPDIR_FRESH2=$(mktemp -d)
+FRESH2_EXIT=0
+node "$REPO_ROOT/bin/install.js" update --dir "$TMPDIR_FRESH2" > /dev/null 2>&1 || FRESH2_EXIT=$?
+if [ "$FRESH2_EXIT" -eq 0 ]; then
+  pass "'update' on a fresh dir with no deprecated files exits 0"
+else
+  fail "'update' on a fresh dir exited $FRESH2_EXIT (expected 0)"
+fi
+rm -rf "$TMPDIR_FRESH2"
+
+# ── Section 11: /draft-plan exists, /plan does not ───────────────────────────
+
+echo ""
+echo "11. /draft-plan rename"
+
+if [ -f "$REPO_ROOT/commands/draft-plan.md" ]; then
+  pass "commands/draft-plan.md exists"
+else
+  fail "commands/draft-plan.md does not exist"
+fi
+
+if [ ! -f "$REPO_ROOT/commands/plan.md" ]; then
+  pass "commands/plan.md does not exist (correctly removed)"
+else
+  fail "commands/plan.md still exists — should have been renamed to draft-plan.md"
+fi
+
+# The .claude/commands/ mirror must also ship draft-plan and not plan
+if [ -f "$REPO_ROOT/.claude/commands/draft-plan.md" ]; then
+  pass ".claude/commands/draft-plan.md exists (self-dogfood mirror present)"
+else
+  fail ".claude/commands/draft-plan.md does not exist — self-dogfood copy not updated"
+fi
+
+if [ ! -f "$REPO_ROOT/.claude/commands/plan.md" ]; then
+  pass ".claude/commands/plan.md does not exist (correctly removed from mirror)"
+else
+  fail ".claude/commands/plan.md still exists in .claude/commands/ — stale mirror"
+fi
+
+# Grep for stale /plan references (excluding thoughts/, scripts/, and DEPRECATED_FILES lists)
+STALE_PLAN=$(grep -rEn '"/plan|/plan ' \
+  --include='*.md' --include='*.js' --include='*.sh' \
+  --exclude='verify.sh' \
+  --exclude-dir=thoughts \
+  --exclude-dir=.git \
+  "$REPO_ROOT" 2>/dev/null | \
+  grep -v 'DEPRECATED_FILES\|commands/plan\.md\|compact\.md\|draft-plan' || true)
+
+if [ -z "$STALE_PLAN" ]; then
+  pass "No stale '/plan' references found in source files"
+else
+  fail "Stale '/plan' references found: $(echo "$STALE_PLAN" | head -5)"
+fi
+
+# ── Section 12: /save-session dual-path design ───────────────────────────────
+
+echo ""
+echo "12. /save-session dual-path design"
+
+if ! grep -q "Run the built-in" "$REPO_ROOT/commands/save-session.md" 2>/dev/null; then
+  pass "commands/save-session.md does not contain stale 'Run the built-in' text"
+else
+  fail "commands/save-session.md still contains 'Run the built-in' — old single-path design"
+fi
+
+if grep -q "Path A" "$REPO_ROOT/commands/save-session.md" 2>/dev/null; then
+  pass "commands/save-session.md contains 'Path A'"
+else
+  fail "commands/save-session.md missing 'Path A'"
+fi
+
+if grep -q "Continuation prompt" "$REPO_ROOT/commands/save-session.md" 2>/dev/null; then
+  pass "commands/save-session.md contains 'Continuation prompt'"
+else
+  fail "commands/save-session.md missing 'Continuation prompt'"
+fi
+
+# ── Section 13: /research prohibited actions ─────────────────────────────────
+
+echo ""
+echo "13. /research prohibited actions"
+
+# Source copy (commands/research.md) — full prohibited-actions section
+if grep -q "Do NOT edit" "$REPO_ROOT/commands/research.md" 2>/dev/null; then
+  pass "commands/research.md contains 'Do NOT edit' (prohibited actions section present)"
+else
+  fail "commands/research.md missing 'Do NOT edit' — prohibited actions section not found"
+fi
+
+if grep -q "Do NOT create, modify, or delete source code" "$REPO_ROOT/commands/research.md" 2>/dev/null; then
+  pass "commands/research.md prohibits modifying source code, config, and docs"
+else
+  fail "commands/research.md missing source-code prohibition bullet"
+fi
+
+if grep -q "Recommendations" "$REPO_ROOT/commands/research.md" 2>/dev/null; then
+  pass "commands/research.md directs discovered changes to 'Recommendations' section"
+else
+  fail "commands/research.md missing 'Recommendations' write-back instruction"
+fi
+
+# Mirror copy (.claude/commands/research.md) — must carry the same prohibited-actions section
+if grep -q "Do NOT edit" "$REPO_ROOT/.claude/commands/research.md" 2>/dev/null; then
+  pass ".claude/commands/research.md contains 'Do NOT edit' (mirror has prohibited actions)"
+else
+  fail ".claude/commands/research.md missing 'Do NOT edit' — mirror not updated"
+fi
+
+if grep -q "Recommendations" "$REPO_ROOT/.claude/commands/research.md" 2>/dev/null; then
+  pass ".claude/commands/research.md contains 'Recommendations' write-back instruction"
+else
+  fail ".claude/commands/research.md missing 'Recommendations' — mirror incomplete"
+fi
+
+# The prohibited-actions section must be present in both copies
+# (parity: both files share identical prohibited-actions text)
+PROHIBITED_SOURCE=$(grep -A5 "Prohibited actions" "$REPO_ROOT/commands/research.md" 2>/dev/null || true)
+PROHIBITED_MIRROR=$(grep -A5 "Prohibited actions" "$REPO_ROOT/.claude/commands/research.md" 2>/dev/null || true)
+if [ "$PROHIBITED_SOURCE" = "$PROHIBITED_MIRROR" ]; then
+  pass "commands/research.md and .claude/commands/research.md have identical prohibited-actions text"
+else
+  fail "Prohibited-actions text differs between commands/research.md and .claude/commands/research.md"
+fi
+
+# ── Section 14: README sections ──────────────────────────────────────────────
+
+echo ""
+echo "14. README sections"
+
+if grep -q "Patterns & Anti-patterns" "$REPO_ROOT/README.md" 2>/dev/null; then
+  pass "README.md contains 'Patterns & Anti-patterns' section"
+else
+  fail "README.md missing 'Patterns & Anti-patterns' section"
+fi
+
+if grep -q "Working with Claude" "$REPO_ROOT/README.md" 2>/dev/null; then
+  pass "README.md contains 'Working with Claude' section"
+else
+  fail "README.md missing 'Working with Claude' section"
+fi
+
+# The anti-patterns section must warn users away from the /compact collision
+if grep -q "no \`/compact\` command\|no /compact command" "$REPO_ROOT/README.md" 2>/dev/null; then
+  pass "README.md anti-patterns section warns that context-mogging has no /compact command"
+else
+  fail "README.md missing /compact anti-pattern warning in anti-patterns section"
+fi
+
+# The "Working with Claude's Built-in Commands" table must document /save-session
+if grep -q "/save-session" "$REPO_ROOT/README.md" 2>/dev/null; then
+  pass "README.md 'Working with Claude' table includes /save-session row"
+else
+  fail "README.md 'Working with Claude' table missing /save-session row"
+fi
+
+# The anti-patterns section must warn about skipping /save-session
+if grep -q "Don't skip \`/save-session\`\|Don't skip /save-session" "$REPO_ROOT/README.md" 2>/dev/null; then
+  pass "README.md anti-patterns section warns against skipping /save-session"
+else
+  fail "README.md missing anti-pattern warning about skipping /save-session"
+fi
+
+# ── Section 15: package.json version ─────────────────────────────────────────
+
+echo ""
+echo "15. package.json version"
+
+PKG_VERSION=$(python3 -c "import json; print(json.load(open('$REPO_ROOT/package.json'))['version'])" 2>/dev/null || echo "")
+if [ "$PKG_VERSION" = "1.4.0" ]; then
+  pass "package.json version is 1.4.0"
+else
+  fail "package.json version is '$PKG_VERSION' (expected 1.4.0)"
+fi
 
 # ── Summary ──────────────────────────────────────────────────────────────────
 

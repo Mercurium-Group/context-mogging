@@ -14,7 +14,7 @@
 This project uses the **Research → Plan → Implement** pipeline.
 
 1. **Research first**: Run `/research [topic]` before making changes to unfamiliar areas
-2. **Plan before building**: Run `/plan [task]` to create a reviewed implementation plan
+2. **Plan before building**: Run `/draft-plan [task]` to create a reviewed implementation plan
 3. **Implement from plans**: Run `/implement` to execute plans step-by-step with tests and security review
 4. **Checkpoint often**: Run `/checkpoint` after completing work to commit and update memory
 

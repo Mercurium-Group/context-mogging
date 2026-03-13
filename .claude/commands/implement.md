@@ -1,5 +1,5 @@
 ---
-description: Execute an implementation plan phase by phase. Orchestrates Implementer, Security Reviewer, Test Architect, and Doc Agent in sequence. Run after /plan.
+description: Execute an implementation plan phase by phase. Orchestrates Implementer, Security Reviewer, Test Architect, and Doc Agent in sequence. Run after /draft-plan.
 allowed-tools: Agent, Read, Write, Edit, Bash, Glob, Grep
 model: claude-sonnet-4-6
 argument-hint: "[plan-file-path] or --latest"

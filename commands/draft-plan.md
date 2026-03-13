@@ -5,9 +5,15 @@ model: claude-opus-4-6
 argument-hint: "[task description] or --from [research-artifact-path]"
 ---
 
-## /plan $ARGUMENTS
+## /draft-plan $ARGUMENTS
 
 You are running the **Plan** phase of the context engineering pipeline.
+
+### Step 0: Log phase start
+
+```bash
+python3 -c "import json,datetime,os; root=os.popen('git rev-parse --show-toplevel 2>/dev/null').read().strip() or os.getcwd(); log=os.path.join(root,'thoughts/shared/logs','events.jsonl'); os.makedirs(os.path.dirname(log),exist_ok=True); f=open(log,'a'); f.write(json.dumps({'ts':datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'),'event':'phase_start','phase':'plan'})+chr(10)); f.close()" 2>/dev/null || true
+```
 
 ### Step 1: Load context
 
@@ -54,6 +60,12 @@ Print the full plan. Then say:
 > Please review the plan above. When ready, run `/implement thoughts/shared/plans/[slug].md` to begin.
 >
 > To modify the plan, edit the file directly and re-run `/implement`.
+
+### Step 5: Log phase end
+
+```bash
+python3 -c "import json,datetime,os,shlex; root=os.popen('git rev-parse --show-toplevel 2>/dev/null').read().strip() or os.getcwd(); log=os.path.join(root,'thoughts/shared/logs','events.jsonl'); artifact=os.popen('ls -t '+shlex.quote(os.path.join(root,'thoughts/shared/plans'))+'/*.md 2>/dev/null | head -1').read().strip(); f=open(log,'a'); f.write(json.dumps({'ts':datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'),'event':'phase_end','phase':'plan','artifact':artifact})+chr(10)); f.close()" 2>/dev/null || true
+```
 
 ### Rules
 

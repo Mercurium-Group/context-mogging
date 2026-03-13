@@ -58,7 +58,7 @@ Read the first 50 lines of `memory/core.md` to get project identity and recent A
 - **Heavy**: Very long conversation or context feels sluggish → run `/save-session` before next task
 
 End with one of:
-> Use `/research [topic]` to start investigating, `/plan [task]` to plan work, or `/implement --latest` to resume an existing plan.
+> Use `/research [topic]` to start investigating, `/draft-plan [task]` to plan work, or `/implement --latest` to resume an existing plan.
 
 Or if context is heavy:
 > Run `/save-session` before starting the next task to keep things clean.

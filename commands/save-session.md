@@ -1,5 +1,5 @@
 ---
-description: Prepare for context compaction. Captures durable knowledge to memory, then provides preservation hints for Claude's built-in /compact command.
+description: Intentional context hygiene. Save memory and choose your path: compact in-place or continue in a fresh session.
 allowed-tools: Read, Bash, Glob, Write
 model: claude-haiku-4-5-20251001
 argument-hint: "[--preserve topic]"
@@ -7,7 +7,9 @@ argument-hint: "[--preserve topic]"
 
 ## /save-session $ARGUMENTS
 
-Prepare for context compaction. This command does NOT compact the context — it gets you ready to use Claude's built-in `/compact` effectively so nothing important is lost.
+Saves all durable knowledge to memory, builds a continuation prompt, and gives you two clean paths forward: compact this session in-place using Claude's built-in /compact, or start a fresh session and paste the continuation prompt to pick up exactly where you left off.
+
+Use this after /checkpoint, after /draft-plan, or any time context feels heavy (50-60%+ used).
 
 ### Step 1: Assess what's in context
 
@@ -49,23 +51,46 @@ If nothing is in progress (clean working tree, no active plan), simplify to:
 Session complete. No active work to preserve.
 ```
 
-### Step 4: Hand off to built-in /compact
+### Step 4: Present paths forward
 
-Print:
-```
-## Ready to Compact
-
-Memory is up to date.
-
-Here's what to preserve — paste this when /compact asks:
+Print the following:
 
 ---
-[preservation list]
+
+## Memory Saved — Choose Your Path
+
+All durable knowledge is written to memory. Here are your two options:
+
+### Path A — Compact in place (stay in this session)
+
+Run Claude's built-in `/compact` command. When it asks what to preserve, paste the list above.
+This compresses context but keeps you in the same session.
+
+### Path B — Fresh session (recommended after major phase transitions)
+
+1. Copy this continuation prompt:
+
+---
+**Continuation prompt** (paste at the start of your next `claude` session):
+
+```
+I'm continuing work on [PROJECT NAME].
+
+Last completed: [LAST COMPLETED PHASE OR TASK — e.g., "drafted plan for X" / "implemented phase 2" / "checkpointed commit abc1234"]
+
+Active plan: [PLAN FILE PATH if applicable, else "none"]
+
+Run `/status` to orient, then [NEXT ACTION — e.g., "run /implement [plan path]"].
+```
 ---
 
-Next: Run the built-in `/compact` command now.
-After compaction, run `/status` to verify orientation.
-```
+2. Exit this session (`Ctrl+C` or type `/quit`)
+3. Run `claude` in your terminal
+4. Paste the continuation prompt
+
+> **Note**: Context-mogging has no `/compact` command of its own. `/save-session` is the preparation step — the actual compaction happens via Claude's built-in or a fresh session.
+
+---
 
 ### Step 5: Log compaction
 

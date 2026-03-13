@@ -83,6 +83,24 @@ copy_dir_recursive() {
   done
 }
 
+DEPRECATED_FILES=(
+  "commands/compact.md"
+  "commands/plan.md"
+)
+
+clean_deprecated() {
+  for rel in "${DEPRECATED_FILES[@]}"; do
+    local full="${CLAUDE_DIR}/${rel}"
+    if [[ -f "$full" ]]; then
+      if rm "$full" 2>/dev/null; then
+        success "Removed deprecated: ${rel}"
+      else
+        warn "Could not remove deprecated: ${rel} (skipping)"
+      fi
+    fi
+  done
+}
+
 # ── Detection ────────────────────────────────────────────────────────────────
 # Bash 3 compatible: individual variables, not associative arrays.
 
@@ -373,6 +391,11 @@ for dir in commands agents skills; do
   copy_dir_recursive "${SCRIPT_DIR}/${dir}" "${CLAUDE_DIR}/${dir}"
 done
 
+
+echo ""
+echo "Cleaning up deprecated files..."
+clean_deprecated
+
 # 2. Merge settings.json (simplified — concatenates hooks if jq available)
 echo ""
 echo "Configuring hooks..."
@@ -473,10 +496,10 @@ cat << 'QUICKSTART'
     1. Review CLAUDE.md — search for TODO: to finish setup
     2. Open Claude Code in this project
     3. Run /research to explore your codebase
-    4. Run /plan to create an implementation plan
+    4. Run /draft-plan to create an implementation plan
     5. Run /implement to execute the plan
 
-  Pipeline: /research → /plan → /implement → /checkpoint
+  Pipeline: /research → /draft-plan → /implement → /checkpoint
 
   Docs: https://github.com/Mercurium-Group/context-mogging
 

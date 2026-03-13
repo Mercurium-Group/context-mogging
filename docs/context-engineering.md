@@ -87,7 +87,7 @@ Applied here: The Implementer agent is explicitly instructed not to improvise. I
 
 > "Don't let the agent plan and implement in the same pass."
 
-Applied here: `/research`, `/plan`, and `/implement` are separate commands. The plan is saved to a file and reviewed by a human before implementation begins. This creates a natural checkpoint where wrong assumptions can be caught.
+Applied here: `/research`, `/draft-plan`, and `/implement` are separate commands. The plan is saved to a file and reviewed by a human before implementation begins. This creates a natural checkpoint where wrong assumptions can be caught.
 
 ### 5. Use specialized agents for isolated tasks
 
@@ -119,7 +119,7 @@ Updated by: `/checkpoint` (when architecture changes), `/save-session` (before s
 **Purpose**: Working memory between commands in the same pipeline run
 **Contents**: Research artifacts, implementation plans, session logs
 
-Used by: `/plan` reads the latest research artifact; `/implement` reads the plan file
+Used by: `/draft-plan` reads the latest research artifact; `/implement` reads the plan file
 
 ### Layer 3: Session context (the conversation window)
 **Lifetime**: Current session only

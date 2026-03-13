@@ -24,6 +24,11 @@ const THOUGHTS_DIRS = [
   'thoughts/shared/logs',
 ];
 
+const DEPRECATED_FILES = [
+  'commands/compact.md',      // renamed to save-session.md in v1.2.0
+  'commands/plan.md',         // renamed to draft-plan.md in v1.4.0
+];
+
 const FALLBACKS = {
   PROJECT_NAME: 'TODO: project name',
   SHORT_DESCRIPTION: 'TODO: one-line project description',
@@ -140,6 +145,20 @@ function appendGitignoreLines(targetGitignore, additionsFile) {
   }
 }
 
+function cleanDeprecated(claudeDir) {
+  for (const rel of DEPRECATED_FILES) {
+    const fullPath = path.join(claudeDir, rel);
+    try {
+      if (fs.existsSync(fullPath)) {
+        fs.unlinkSync(fullPath);
+        success(`Removed deprecated: ${rel}`);
+      }
+    } catch (e) {
+      console.warn(`  Warning: could not remove ${rel}: ${e.message}`);
+    }
+  }
+}
+
 /**
  * Read template file, replace {{TOKEN}} placeholders with detected values.
  * Any token not detected falls back to FALLBACKS, then to a generic TODO.
@@ -230,6 +249,9 @@ function main() {
     copyDirRecursive(src, dest, force);
   }
 
+  console.log('\nCleaning up deprecated files...');
+  cleanDeprecated(claudeDir);
+
   // 2. Merge settings.json
   console.log('\nConfiguring hooks...');
   const settingsSrc = path.join(pkgRoot, 'templates', 'settings.json');
@@ -314,10 +336,10 @@ function main() {
     1. Review CLAUDE.md — search for TODO: to finish setup${hasTodos ? '\n       (a few fields need manual input)' : ''}
     2. Open Claude Code in this project
     3. Run /research to explore your codebase
-    4. Run /plan to create an implementation plan
+    4. Run /draft-plan to create an implementation plan
     5. Run /implement to execute the plan
 
-  Pipeline: /research → /plan → /implement → /checkpoint
+  Pipeline: /research → /draft-plan → /implement → /checkpoint
 
   To update later:  npx context-mogging@latest update
 

@@ -9,7 +9,7 @@ This document explains each stage of the Research → Plan → Implement → Che
 The pipeline has four main phases and three utility commands:
 
 ```
-/research  →  /plan  →  /implement  →  /checkpoint
+/research  →  /draft-plan  →  /implement  →  /checkpoint
                                   ↕
                     /status  /save-session  /metrics
 ```
@@ -66,9 +66,13 @@ Use `/research` before any non-trivial task. Skip it only when:
 
 Research is designed to be context-light. The Explorer agents do the heavy reading; the main context only sees the synthesized summary. The command targets ≤40% context use when complete. If you find yourself loading many files directly while researching, use Explorer agents instead.
 
+### Read-only
+
+`/research` does not modify files. The only file it writes is the research artifact in `thoughts/shared/research/`. If you discover changes that should be made, they go in the artifact under "Recommendations" — not in the source code. Changes belong in `/draft-plan` and `/implement`.
+
 ---
 
-## Phase 2: Plan (`/plan`)
+## Phase 2: Plan (`/draft-plan`)
 
 ### What it does
 
@@ -77,11 +81,11 @@ Plan turns research findings (or a task description) into a precise, phase-by-ph
 ### Input
 
 ```
-/plan [task description]
-/plan --from thoughts/shared/research/YYYY-MM-DD-HHmm-slug.md
+/draft-plan [task description]
+/draft-plan --from thoughts/shared/research/YYYY-MM-DD-HHmm-slug.md
 ```
 
-If you run `/plan` without `--from`, it looks for the most recent research artifact and asks whether to use it.
+If you run `/draft-plan` without `--from`, it looks for the most recent research artifact and asks whether to use it.
 
 ### What happens
 
@@ -102,7 +106,7 @@ A plan file at `thoughts/shared/plans/[slug].md` containing:
 
 ### When to use it
 
-Use `/plan` for any task with more than one logical step. If the task is one file and one function, you might skip this. For anything else — new features, refactors, bug fixes that touch multiple systems — plan first.
+Use `/draft-plan` for any task with more than one logical step. If the task is one file and one function, you might skip this. For anything else — new features, refactors, bug fixes that touch multiple systems — plan first.
 
 ### The human review gate
 
@@ -259,7 +263,7 @@ Logs: none
 [project name and current work from memory/core.md]
 
 ## Context Health
-moderate — long conversation, consider /compact before next task
+moderate — long conversation, consider /save-session before next task
 ```
 
 ---
@@ -268,20 +272,21 @@ moderate — long conversation, consider /compact before next task
 
 ### What it does
 
-Save Session prepares you to safely reset the context window. It does not compact on its own — it gets you ready to use Claude's built-in `/compact` without losing important information.
+Save Session is intentional context hygiene. It writes durable knowledge to memory, builds a continuation prompt, and presents two clean paths forward: compact in-place or start a fresh session.
 
 ### When to run it
 
+- After `/checkpoint` — before moving to the next task
+- After `/draft-plan` — before starting implementation
+- When context hits 50-60% used
 - When `/status` reports moderate or heavy context
-- Between tasks, before starting something new
-- When the session has been going for a while and things feel sluggish
 
 ### What happens
 
 1. Assesses the current session: active plan, unresolved issues, key decisions, uncommitted changes.
 2. Writes anything important that isn't already in `memory/core.md`.
-3. Builds a preservation list — a structured summary of what the built-in `/compact` should preserve.
-4. Hands off to you with instructions for running the built-in `/compact`.
+3. Builds a preservation list — a structured summary of what to preserve.
+4. Presents two paths: compact in-place (Path A) or fresh session with a continuation prompt (Path B).
 
 ### The preservation list
 
@@ -297,11 +302,13 @@ Things to preserve after compaction:
 5. Next action: implement Phase 3 — src/auth/token.ts:refreshToken
 ```
 
-Paste this when the built-in `/compact` asks what to preserve. After compaction, run `/status` to verify you're oriented.
+For **Path A** (compact in-place): paste this when the built-in `/compact` asks what to preserve. After compaction, run `/status` to verify orientation.
 
-### Write memory before compacting
+For **Path B** (fresh session): a continuation prompt is generated for you. Copy it, exit the session, run `claude`, and paste the prompt to resume exactly where you left off.
 
-Never compact before writing important knowledge to memory. Compaction throws away the conversation. If a decision was made this session that should survive, it needs to be in `memory/core.md` first. `/save-session` handles this automatically, but it's worth understanding why the order matters.
+### Write memory before either path
+
+Never compact or exit before writing important knowledge to memory. Compaction throws away the conversation. If a decision was made this session that should survive, it needs to be in `memory/core.md` first. `/save-session` handles this automatically, but it's worth understanding why the order matters.
 
 ---
 
