@@ -1,4 +1,17 @@
 {
+  "permissions": {
+    "deny": [
+      "mcp__pencil__*",
+      "mcp__de852d11-42d1-40f4-b66c-8a2173c1a569__*",
+      "mcp__09a95378-8d9c-4178-be41-f5e7c434e6f5__*",
+      "mcp__Claude_in_Chrome__*",
+      "mcp__Claude_Preview__*",
+      "mcp__Control_Chrome__*",
+      "mcp__mcp-registry__*",
+      "mcp__scheduled-tasks__*",
+      "mcp__Figma__*"
+    ]
+  },
   "hooks": {
     "PreToolUse": [
       {
