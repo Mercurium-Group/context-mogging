@@ -1,6 +1,6 @@
 {
   "name": "context-mogging",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "A portable context engineering system for Claude Code. Research → Plan → Implement pipeline with sub-agents, memory, and hooks.",
   "author": "Mercurium Group",
   "license": "MIT",

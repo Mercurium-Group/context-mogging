@@ -749,10 +749,122 @@ echo ""
 echo "15. package.json version"
 
 PKG_VERSION=$(python3 -c "import json; print(json.load(open('$REPO_ROOT/package.json'))['version'])" 2>/dev/null || echo "")
-if [ "$PKG_VERSION" = "1.4.0" ]; then
-  pass "package.json version is 1.4.0"
+if [ "$PKG_VERSION" = "1.5.0" ]; then
+  pass "package.json version is 1.5.0"
 else
-  fail "package.json version is '$PKG_VERSION' (expected 1.4.0)"
+  fail "package.json version is '$PKG_VERSION' (expected 1.5.0)"
+fi
+
+# ── Section 16: /memory-health command ───────────────────────────────────────
+
+echo ""
+echo "16. /memory-health command"
+
+if [ -f "$REPO_ROOT/commands/memory-health.md" ]; then
+  pass "commands/memory-health.md exists"
+else
+  fail "commands/memory-health.md does not exist"
+fi
+
+if [ -f "$REPO_ROOT/.claude/commands/memory-health.md" ]; then
+  pass ".claude/commands/memory-health.md exists (self-dogfood mirror present)"
+else
+  fail ".claude/commands/memory-health.md does not exist — self-dogfood copy missing"
+fi
+
+if grep -q "wc -l memory/core.md" "$REPO_ROOT/commands/memory-health.md" 2>/dev/null; then
+  pass "memory-health.md checks line count with wc -l"
+else
+  fail "memory-health.md missing wc -l memory/core.md health check"
+fi
+
+if grep -qi "Question A" "$REPO_ROOT/commands/memory-health.md" 2>/dev/null; then
+  pass "memory-health.md contains structured interview questions"
+else
+  fail "memory-health.md missing structured interview questions"
+fi
+
+if grep -qi "Do not write.*files\|never write.*files\|until.*approv\|before.*approv" "$REPO_ROOT/commands/memory-health.md" 2>/dev/null; then
+  pass "memory-health.md has approval gate before writing files"
+else
+  fail "memory-health.md missing approval gate — would write files without user sign-off"
+fi
+
+if grep -q "Product Philosophy" "$REPO_ROOT/commands/memory-health.md" 2>/dev/null; then
+  pass "memory-health.md mentions Product Philosophy as a section to capture"
+else
+  fail "memory-health.md does not mention Product Philosophy"
+fi
+
+if grep -q "Write" "$REPO_ROOT/commands/memory-health.md" 2>/dev/null && \
+   grep -q "Edit" "$REPO_ROOT/commands/memory-health.md" 2>/dev/null; then
+  pass "memory-health.md allowed-tools includes Write and Edit"
+else
+  fail "memory-health.md allowed-tools missing Write or Edit"
+fi
+
+# ── Section 17: /status reads full core.md ───────────────────────────────────
+
+echo ""
+echo "17. /status reads full core.md"
+
+if ! grep -q "first 50 lines" "$REPO_ROOT/commands/status.md" 2>/dev/null; then
+  pass "commands/status.md does not read only the first 50 lines of core.md"
+else
+  fail "commands/status.md still reads only 'first 50 lines' — misses tail of append-only file"
+fi
+
+if grep -q "wc -l memory/core.md" "$REPO_ROOT/commands/status.md" 2>/dev/null || \
+   grep -q "in full" "$REPO_ROOT/commands/status.md" 2>/dev/null; then
+  pass "commands/status.md reads core.md in full and/or checks line count"
+else
+  fail "commands/status.md missing full core.md read or wc -l check"
+fi
+
+# ── Section 18: memory-core.md template structure ────────────────────────────
+
+echo ""
+echo "18. memory-core.md template structure"
+
+if grep -q "Product Philosophy" "$REPO_ROOT/templates/memory-core.md" 2>/dev/null; then
+  pass "templates/memory-core.md contains Product Philosophy section"
+else
+  fail "templates/memory-core.md missing Product Philosophy section"
+fi
+
+if grep -q "ADR Index" "$REPO_ROOT/templates/memory-core.md" 2>/dev/null; then
+  pass "templates/memory-core.md uses 'ADR Index' (index pattern, not inline)"
+else
+  fail "templates/memory-core.md missing 'ADR Index' — may still invite inline ADR text"
+fi
+
+if ! grep -q "### ADR-001" "$REPO_ROOT/templates/memory-core.md" 2>/dev/null; then
+  pass "templates/memory-core.md does not show inline ADR format (### ADR-001)"
+else
+  fail "templates/memory-core.md still shows inline ADR format — will cause bloat"
+fi
+
+# ── Section 19: CLAUDE.md template two-tier memory model ─────────────────────
+
+echo ""
+echo "19. CLAUDE.md template memory model"
+
+if grep -q "two-tier memory model" "$REPO_ROOT/templates/CLAUDE.md" 2>/dev/null; then
+  pass "templates/CLAUDE.md explains two-tier memory model"
+else
+  fail "templates/CLAUDE.md missing two-tier memory model explanation"
+fi
+
+if grep -q "Auto-memory\|auto-memory\|MEMORY.md" "$REPO_ROOT/templates/CLAUDE.md" 2>/dev/null; then
+  pass "templates/CLAUDE.md documents auto-memory (MEMORY.md) separately from core.md"
+else
+  fail "templates/CLAUDE.md does not explain auto-memory vs core.md distinction"
+fi
+
+if grep -q "memory-health" "$REPO_ROOT/templates/CLAUDE.md" 2>/dev/null; then
+  pass "templates/CLAUDE.md references /memory-health command"
+else
+  fail "templates/CLAUDE.md does not reference /memory-health"
 fi
 
 # ── Summary ──────────────────────────────────────────────────────────────────

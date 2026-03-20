@@ -16,6 +16,13 @@
 - **Created**: {{DATE}}
 - **Stack**: {{STACK}}
 
+## Product Philosophy
+
+<!-- 3–5 bullets: who this is for, how they should feel, guiding principles.      -->
+<!-- These affect every decision — copy tone, UX choices, architecture forks.      -->
+<!-- Fill this in at project start. It is the hardest thing to reconstruct from    -->
+<!-- code after the fact. Run /memory-health if this section is blank after day 1. -->
+
 ## Build Commands
 
 ```bash
@@ -26,9 +33,11 @@ lint:    {{LINT_CMD}}
 build:   {{BUILD_CMD}}
 ```
 
-## Architecture Decision Records
+## ADR Index
 
-<!-- Format: ### ADR-001: [Title] / Date / Decision / Rationale -->
+<!-- One-liner per ADR. Full text belongs in memory/topics/adrs.md (or split by domain). -->
+<!-- Writing full ADR text inline here is the #1 cause of core.md bloat — don't do it.  -->
+<!-- Format: - **ADR-001**: [one-line summary] → [topics/adrs.md](topics/adrs.md)        -->
 
 ## Conventions
 

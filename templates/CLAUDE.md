@@ -48,13 +48,15 @@ Never skip straight to implementation without understanding the codebase first.
 
 ## Memory References
 
-Core project memory is stored in `memory/core.md`. It tracks:
-- Architecture decisions (ADRs)
-- Known issues and workarounds
-- Rejected alternatives (so we don't revisit dead ends)
-- Conventions discovered by the pattern finder
+This project uses a **two-tier memory model**:
 
-Topic-specific memory lives in `memory/topics/`. Create new topic files as the project grows.
+**`memory/core.md`** — always-loaded index. You write this. Keep it under 150 lines.
+It tracks: product philosophy, ADR index, conventions (one-liners), active issues, rejected alternatives.
+Run `/memory-health` if it grows beyond 150 lines.
+
+**`memory/topics/*.md`** — detail fetched on demand. Full ADR text, component inventories, API quirks, phase logs. Claude reads these when working in that area. Create one whenever a section in `core.md` exceeds ~10 lines.
+
+**Auto-memory** (`~/.claude/projects/.../MEMORY.md`) — Claude Code writes this automatically as a session-level scratchpad. It lives outside the repo. You don't need to manage it manually — but be aware it exists separately from `core.md` and can also grow large. It is not a substitute for `core.md`.
 
 Session memory in `memory/sessions/` is ephemeral and gitignored.
 

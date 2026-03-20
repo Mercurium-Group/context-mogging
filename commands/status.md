@@ -25,7 +25,10 @@ ls thoughts/shared/plans/ 2>/dev/null | sort | tail -5
 ls thoughts/shared/logs/ 2>/dev/null | sort | tail -5
 ```
 
-Read the first 50 lines of `memory/core.md` to get project identity and recent ADRs.
+Read `memory/core.md` in full — it should be under 150 lines by design. Also check its line count:
+```bash
+wc -l memory/core.md
+```
 
 ### Output format
 
