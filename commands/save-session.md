@@ -30,6 +30,20 @@ Only write things that are:
 - Likely to matter in future sessions
 - Not already in memory
 
+**Before writing, check memory health:**
+
+```bash
+wc -l memory/core.md
+```
+
+- **Under 150 lines**: write directly to `core.md` as usual
+- **150+ lines**: do NOT append to `core.md` — route new knowledge to a topic file instead:
+  1. Create `memory/topics/[topic-name].md` with the detailed content
+  2. Add a one-liner to the Topic Index in `core.md`: `- [topic-name](topics/topic-name.md) — [one-line description]`
+  3. If existing sections in `core.md` are verbose (long lists, multi-line workarounds, feature inventories), move them to topic files too — this is a good time to do it
+
+`core.md` is the always-loaded index (truncated after 200 lines). Topic files are fetched on demand. Keep core lean.
+
 ### Step 3: Build the preservation hint
 
 Construct a preservation list for the built-in `/compact`:

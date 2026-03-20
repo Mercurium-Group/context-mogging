@@ -1,7 +1,14 @@
 # Core Memory
 
-> This is the project's persistent memory. Append new entries — don't delete old ones.
-> Claude reads this at the start of every session to maintain continuity.
+> This is the project's persistent memory. Claude reads this at the start of every session.
+> **Keep this file under 150 lines.** It is truncated at 200 — anything beyond that is invisible.
+>
+> **Two-tier memory model:**
+> - `core.md` (this file) = always-loaded index. One-liners only. No long lists, no verbose notes.
+> - `memory/topics/*.md` = detail fetched on demand. Move anything verbose here.
+>
+> When a section grows beyond ~10 lines, move it to `memory/topics/[topic].md` and replace it
+> with a one-line Topic Index entry. Run `wc -l memory/core.md` at each `/checkpoint` to check.
 
 ## Project Identity
 
@@ -39,5 +46,6 @@ build:   {{BUILD_CMD}}
 
 ## Topic Index
 
-<!-- Links to detailed memory files in memory/topics/ -->
-<!-- Format: - [topic-name](topics/topic-name.md) — [one-line description] -->
+<!-- Offload detail here. When any section above grows beyond ~10 lines, move it to a topic file. -->
+<!-- Claude will Read() topic files on demand when working in that area.                         -->
+<!-- Format: - [topic-name](topics/topic-name.md) — [one-line description]                      -->

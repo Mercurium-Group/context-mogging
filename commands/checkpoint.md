@@ -67,6 +67,15 @@ Read `memory/core.md`. Update it only if:
 
 Skip this step if nothing important changed. Do not update memory for implementation details.
 
+**Memory health check**: Count the lines in `memory/core.md`. If it has more than 150 lines:
+- Do NOT append more content to it
+- Instead, identify the largest or most detailed section (e.g., a list of completed features, a deep set of conventions, component inventory)
+- Move that section to `memory/topics/[topic-name].md`
+- Replace it in `core.md` with a one-line entry in the Topic Index: `- [topic-name](topics/topic-name.md) — [one-line description]`
+- Goal: keep `core.md` under 150 lines so it never gets truncated mid-session
+
+`core.md` is the always-loaded index. Topic files are loaded on demand. Detail belongs in topics, not core.
+
 ### Step 5: Report
 
 ```
